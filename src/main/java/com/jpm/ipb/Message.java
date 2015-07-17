@@ -1,21 +1,26 @@
 package com.jpm.ipb;
 
-public abstract class Message {
+/**
+ *
+ */
+public interface Message {
 
 	/**
 	 *
 	 */
-	public void completed() {// When this method is called, message releases a thread
+	void completed();
 
+	/**
+	 *
+	 * @return
+	 */
+	boolean isCompleted();
 
-
-	}
-
-	public void run() {
-
-
-
-	}
+	/**
+	 *
+	 * @return
+	 */
+	public abstract String getMessageNumber();
 
 	/**
 	 *
@@ -23,10 +28,4 @@ public abstract class Message {
 	 */
 	public abstract int getGroupId();
 
-	/**
-	 *
-	 * @return
-	 */
-	public abstract int getId();
-	
 }

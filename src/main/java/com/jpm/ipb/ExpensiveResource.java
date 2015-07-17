@@ -1,18 +1,24 @@
 package com.jpm.ipb;
 
 /**
- * Created by shahin.zebaee on 16/07/2015.
+ * Created by shahin.zibaee on 16/07/2015.
  */
 public class ExpensiveResource implements Runnable {
 
     private boolean idle;
 
-    public ExpensiveResource(Message) {
+    /**
+     *
+     */
+    public ExpensiveResource() {
 
         idle = true;
 
     }
 
+    /**
+     *
+     */
     public void run() {
 
         idle = false;
@@ -22,12 +28,36 @@ public class ExpensiveResource implements Runnable {
 
     }
 
+    /**
+     *
+     * @return
+     */
+    public boolean isIdle() {
+
+        return idle;
+
+    }
+
+
+    /**
+     *
+     * @param msg
+     */
     public void process(Message msg) {
 
         for (int i = 0; i < 10; i++) {
 
-            System.out.println("processing....." + i);
-            System.sleep(500);
+            System.out.println("Group: " + msg.getGroupId() + "msg#" + msg.getMessageNumber() + "...processing " + i);
+
+            try {
+
+                Thread.sleep(500);
+
+            } catch (InterruptedException ie) {
+
+                ie.printStackTrace();
+
+            }
 
         }
 

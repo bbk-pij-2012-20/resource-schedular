@@ -7,32 +7,36 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
- * Created by shahin.zebaee on 16/07/2015.
+ * Created by shahin.zibaee on 16/07/2015.
  */
 public class Scheduler {
 
     private Gateway gateway;
-    private List<Message> messageQueue;
+    private LinkedList<Message> messageQueue;
     private List<Message> readyQueue;
     private ExpensiveResource[] expensiveResources;
     private ExecutorService executorService;
     private final int NUMBER_OF_EXPENSIVE_RESOURCES = Runtime.getRuntime().availableProcessors();
-    private String lastMessageSent;
+    private int groupIdOfLastMessageSent;
 
-    public Scheduler() {
+    public Scheduler(LinkedList<Message> listOfMessages) {
 
-        lastMessagePopped = messageQueue.getFirst();
         gateway = new GatewayImpl();
-        messageQueue = new LinkedList<>();
+        messageQueue = listOfMessages;
+        groupIdOfLastMessageSent = messageQueue.getFirst().getGroupId();
         readyQueue = new LinkedList<>();
         expensiveResources = new ExpensiveResource[NUMBER_OF_EXPENSIVE_RESOURCES];
         createThreadPool();
 
     }
 
+    /**
+     *
+     * @return
+     */
     public boolean noMessagesToProcess() {
 
-        return messageQueue.empty();
+        return messageQueue.isEmpty();
 
     }
 
@@ -66,20 +70,20 @@ public class Scheduler {
      */
     public void schedule() {
 
-        lastMessageSent = messageQueue.peek().getGroupId();
+        groupIdOfLastMessageSent = messageQueue.peek().getGroupId();
 
         if (idleResourceFound()) {
 
-            gateway.sendMessage(messageQueue.pop());
+            gateway.send(messageQueue.pop());
 
         } else {
 
             //this is wrong - the spec says if no resources are available, msgs should not be sent to the gateway.,
-            gateway.sendMessage(messageQueue.popSameGroupAsLastMessage());
+            gateway.send(popSameGroupAsLastMessage());
 
         }
 
-        if (messageQueue.empty()) {
+        if (messageQueue.isEmpty()) {
 
             executorService.shutdown();
 
@@ -97,9 +101,9 @@ public class Scheduler {
 
         for (Message msg : messageQueue) {
 
-            if (msg.getGroupId().equals(lastMessageSent)) {
+            if (msg.getGroupId() == (groupIdOfLastMessageSent)) {
 
-                indexOfMessageToBeRemoved = messageQueue.getIndexOf(msg);
+                indexOfMessageToBeRemoved = messageQueue.indexOf(msg);
                 result = messageQueue.remove(indexOfMessageToBeRemoved);
                 break;
 
@@ -121,7 +125,7 @@ public class Scheduler {
 
         while (i < expensiveResources.length && !idleExpensiveResourceFound) {
 
-            if (expensiveResources[i].idle) {
+            if (expensiveResources[i].isIdle()) {
 
                 idleExpensiveResourceFound = true;
 

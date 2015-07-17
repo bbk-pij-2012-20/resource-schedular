@@ -1,5 +1,8 @@
 package com.jpm.ipb;
 
+/**
+ *
+ */
 public interface Gateway {
 
 	/**
@@ -7,5 +10,6 @@ public interface Gateway {
 	 * @param message
 	 */
 	void send(Message message);
+
 	
 }
