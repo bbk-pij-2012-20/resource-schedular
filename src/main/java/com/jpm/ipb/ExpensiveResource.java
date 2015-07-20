@@ -1,8 +1,6 @@
 package com.jpm.ipb;
 //testing a new commit
-/**
- * Created by shahin.zibaee on 16/07/2015.
- */
+
 public class ExpensiveResource implements Runnable {
 
     private boolean idle;
@@ -32,8 +30,8 @@ public class ExpensiveResource implements Runnable {
 
     /**
      *
-     * @return
-     *e
+     * @return true if this expensive resource is idle
+     */
     public boolean isIdle() {
 
         return idle;
@@ -43,7 +41,7 @@ public class ExpensiveResource implements Runnable {
 
     /**
      *
-     * @param msg
+     * @param msg  the Message to be processed by this resource
      */
     public void process(Message msg) {
 

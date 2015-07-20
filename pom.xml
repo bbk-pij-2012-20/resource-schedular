@@ -3,11 +3,11 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.jpm.ipb</groupId>
-  <artifactId>resource-schedular</artifactId>
+  <artifactId>resource-scheduler</artifactId>
   <version>1.0</version>
   <packaging>jar</packaging>
 
-  <name>resource-schedular</name>
+  <name>resource-scheduler</name>
   <url>http://maven.apache.org</url>
 
   <properties>
@@ -30,7 +30,7 @@
   </dependencies>
 
   <build>
-    <finalName>ResourceSchedular</finalName>
+    <finalName>ResourceScheduler</finalName>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
