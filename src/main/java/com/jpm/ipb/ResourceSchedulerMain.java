@@ -1,19 +1,12 @@
 package com.jpm.ipb;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 
-/**
- * Created by shahin.zibaee on 16/07/2015.
- */
 public class ResourceSchedulerMain {
-
-    private Scheduler scheduler;
 
     public static void main(String[] args) {
 
-        List<Message> listOfMessages = new LinkedList<>();
+        LinkedList<Message> listOfMessages = new LinkedList<>();
         listOfMessages.add(new MessageGroup1("msg1"));
         listOfMessages.add(new MessageGroup2("msg2"));
         listOfMessages.add(new MessageGroup2("msg3"));
@@ -28,9 +21,9 @@ public class ResourceSchedulerMain {
         listOfMessages.add(new MessageGroup1("msg12"));
         listOfMessages.add(new MessageGroup1("msg13"));
 
-        scheduler = new Scheduler(listOfMessages);
+        Scheduler scheduler = new Scheduler(listOfMessages);
 
-        while (scheduler.noMessagesToProcess()) {
+        while (scheduler.hasMessagesToProcess()) {
 
             scheduler.schedule();
 

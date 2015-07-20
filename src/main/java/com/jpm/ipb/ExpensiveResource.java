@@ -1,7 +1,9 @@
 package com.jpm.ipb;
-//testing a new commit
+//testing a new commit// a new commit from PC at work
 
-public class ExpensiveResource implements Runnable {
+import java.util.concurrent.Callable;
+
+public class ExpensiveResource implements Callable<Boolean> {
 
     private boolean idle;
     private Message msg;
@@ -15,16 +17,14 @@ public class ExpensiveResource implements Runnable {
         this.msg = msg;
 
     }
-
-    /**
-     *
-     */
-    public void run() {
+    @Override
+    public Boolean call() throws Exception {
 
         idle = false;
         process(msg);
         msg.completed();
         idle = true;
+        return true;
 
     }
 
