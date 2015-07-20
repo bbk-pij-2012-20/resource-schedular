@@ -1,42 +1,37 @@
 package com.jpm.ipb;
 
-import java.util.List;
 import java.util.LinkedList;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
-/**
- * Created by shahin.zibaee on 16/07/2015.
- */
 public class Scheduler {
 
     private Gateway gateway;
     private LinkedList<Message> messageQueue;
-    private List<Message> readyQueue;
     private ExpensiveResource[] expensiveResources;
     private ExecutorService executorService;
     private final int NUMBER_OF_EXPENSIVE_RESOURCES = Runtime.getRuntime().availableProcessors();
-    private int groupIdOfLastMessageSent;
+    protected int groupIdOfLastMessageSent;
 
     public Scheduler(LinkedList<Message> listOfMessages) {
 
         gateway = new GatewayImpl();
         messageQueue = listOfMessages;
         groupIdOfLastMessageSent = messageQueue.getFirst().getGroupId();
-        readyQueue = new LinkedList<>();
         expensiveResources = new ExpensiveResource[NUMBER_OF_EXPENSIVE_RESOURCES];
         createThreadPool();
+        initExpensiveResources();
 
     }
 
     /**
      *
-     * @return
+     * @return returns true if the list is not empty
      */
-    public boolean noMessagesToProcess() {
+    public boolean hasMessagesToProcess() {
 
-        return messageQueue.isEmpty();
+        return !messageQueue.isEmpty();
 
     }
 
@@ -50,7 +45,7 @@ public class Scheduler {
     }
 
     /**
-     *
+     * Gives the first message in the queue to each resource.
      */
     private void initExpensiveResources() {
 
@@ -58,7 +53,7 @@ public class Scheduler {
 
         while (i < NUMBER_OF_EXPENSIVE_RESOURCES) {
 
-            executorService.execute(new ExpensiveResource());
+            Future<Boolean> futRes = executorService.submit(new ExpensiveResource(messageQueue.getFirst()));
             i++;
 
         }
@@ -92,19 +87,17 @@ public class Scheduler {
     }
 
     /**
-     * @return
+     * @return  returns the Message that is the same group as the last Message to be processed.
      */
     private Message popSameGroupAsLastMessage() {
 
         Message result = null;
-        int indexOfMessageToBeRemoved = 0;
 
         for (Message msg : messageQueue) {
 
             if (msg.getGroupId() == (groupIdOfLastMessageSent)) {
 
-                indexOfMessageToBeRemoved = messageQueue.indexOf(msg);
-                result = messageQueue.remove(indexOfMessageToBeRemoved);
+                result = messageQueue.remove(messageQueue.indexOf(msg));
                 break;
 
             }
@@ -116,18 +109,18 @@ public class Scheduler {
     }
 
     /**
-     * @return
+     * @return returns true if one of the expensive resources is currently idle
      */
     private boolean idleResourceFound() {
 
-        boolean idleExpensiveResourceFound = false;
         int i = 0;
+        boolean idleResourceFound = false;
 
-        while (i < expensiveResources.length && !idleExpensiveResourceFound) {
+        while (i < expensiveResources.length && !idleResourceFound) {
 
             if (expensiveResources[i].isIdle()) {
 
-                idleExpensiveResourceFound = true;
+                idleResourceFound = true;
 
             }
 
@@ -135,7 +128,7 @@ public class Scheduler {
 
         }
 
-        return idleExpensiveResourceFound;
+        return idleResourceFound;
 
     }
 
