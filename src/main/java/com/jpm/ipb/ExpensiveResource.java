@@ -3,13 +3,14 @@ package com.jpm.ipb;
 
 import java.util.concurrent.Callable;
 
-public class ExpensiveResource implements Callable<Boolean> {
+public class ExpensiveResource implements Callable<String> { // callable (as opposed to runnable) is not needed here but I'm using it to learn about it
 
     private boolean idle;
     private Message msg;
 
     /**
-     *
+     * Constructor
+     * @param   msg     message to be processed
      */
     public ExpensiveResource(Message msg) {
 
@@ -17,20 +18,21 @@ public class ExpensiveResource implements Callable<Boolean> {
         this.msg = msg;
 
     }
+
     @Override
-    public Boolean call() throws Exception {
+    public String call() throws Exception {
 
         idle = false;
         process(msg);
         msg.completed();
         idle = true;
-        return true;
+        return "call task completed!";
 
     }
 
     /**
      *
-     * @return true if this expensive resource is idle
+     * @return          returns true if this expensive resource is idle
      */
     public boolean isIdle() {
 
@@ -38,10 +40,9 @@ public class ExpensiveResource implements Callable<Boolean> {
 
     }
 
-
     /**
      *
-     * @param msg  the Message to be processed by this resource
+     * @param   msg     the Message to be processed by this resource
      */
     public void process(Message msg) {
 
