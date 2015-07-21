@@ -36,10 +36,9 @@ public class SchedulerTest {
     public void testHasMessagesToProcess() throws Exception {
 
         MockitoAnnotations.initMocks(mockFirstMsg);//using annotation to create a mock object rather than using mock()
-        Message mockFirstMsg =  mock(MessageGroup1.class);//using mock() to create a mock object
+        Message mockFirstMsg = mock(MessageGroup1.class);//using mock() to create a mock object
         LinkedList<Message> mockLinkedList = mock(LinkedList.class);//mocking a concrete linked list
         when(mockLinkedList.get(0)).thenReturn(mockFirstMsg);//stubbing
-
 
     }
 

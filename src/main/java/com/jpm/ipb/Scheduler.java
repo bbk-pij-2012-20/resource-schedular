@@ -12,6 +12,10 @@ public class Scheduler <T> {
     private final int NUMBER_OF_EXPENSIVE_RESOURCES = Runtime.getRuntime().availableProcessors();
     protected int groupIdOfLastMessageSent;
 
+    /**
+     *
+     * @param listOfMessages  Messages
+     */
     public Scheduler(LinkedList<Message> listOfMessages) {
 
         gateway = new GatewayImpl();
@@ -25,7 +29,7 @@ public class Scheduler <T> {
 
     /**
      *
-     * @return returns true if the list is not empty
+     * @return  returns     true if the list is not empty
      */
     public boolean hasMessagesToProcess() {
 
@@ -74,33 +78,57 @@ public class Scheduler <T> {
     }
 
     /**
-     *
+     * checks and sends messages according to idle status of the resources
+     * kills the threads if there's nothing left
      */
     public void schedule() {
 
         groupIdOfLastMessageSent = messageQueue.peek().getGroupId();
 
-        if (idleResourceFound()) {
+        while (true) {
 
-            gateway.send(messageQueue.pop());
+            if (idleResourceFound()) {
 
-        } else {
+                sendAnyMessage();
 
-            //this is wrong - the spec says if no resources are available, msgs should not be sent to the gateway.,
-            gateway.send(popSameGroupAsLastMessage());
+            } else {
 
-        }
+                sendMessageOfSameGroupAsLastMessage();
 
-        if (messageQueue.isEmpty()) {
+            }
 
-            executorService.shutdown();
+            if (messageQueue.isEmpty()) {
+
+                executorService.shutdown();
+
+            }
+
+            break;
 
         }
 
     }
 
     /**
-     * @return  returns the Message that is the same group as the last Message to be processed.
+     * sends first Message found to belong to same group as most recently processed Message
+     */
+    private void sendMessageOfSameGroupAsLastMessage() {
+
+        gateway.send(popSameGroupAsLastMessage());
+
+    }
+
+    /**
+     * sends Message from front of queue regardless of group
+     */
+    private void sendAnyMessage() {
+
+        gateway.send(messageQueue.pop());
+
+    }
+
+    /**
+     * @return  returns     Message that is the same group as the last Message to be processed.
      */
     private Message popSameGroupAsLastMessage() {
 
@@ -122,7 +150,7 @@ public class Scheduler <T> {
     }
 
     /**
-     * @return returns true if one of the expensive resources is currently idle
+     * @return  returns     true if one of the expensive resources is currently idle
      */
     private boolean idleResourceFound() {
 

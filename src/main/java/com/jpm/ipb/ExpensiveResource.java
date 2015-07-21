@@ -1,8 +1,10 @@
 package com.jpm.ipb;
-//testing a new commit// a new commit from PC at work
 
 import java.util.concurrent.Callable;
 
+/**
+ *
+ */
 public class ExpensiveResource implements Callable<String> { // callable (as opposed to runnable) is not needed here but I'm using it to learn about it
 
     private boolean idle;
@@ -26,7 +28,7 @@ public class ExpensiveResource implements Callable<String> { // callable (as opp
         process(msg);
         msg.completed();
         idle = true;
-        return "call task completed!";
+        return "callable task completed!";
 
     }
 
