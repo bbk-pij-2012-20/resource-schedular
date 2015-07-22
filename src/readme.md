@@ -14,12 +14,21 @@ external resource:
 
 <ul>
 <li>send messages to be processed by calling the Gateway's send(Message msg) method:</li>
-    public interface Gateway
-    public void send(Message msg)
+'''java
+    public interface Gateway {
 
+        public void send(Message msg)
+
+    }
+'''
 <li>when a Message has completed processing, its completed() method will be called:</li>
-    public interface Message
-    public void completed()
+'''java
+    public interface Message {
+
+        public void completed()
+
+    }
+'''
 </ul>
 
 <h3>Task</h3>
@@ -32,9 +41,11 @@ that:
 <li>can be configured with the number of resources available</li>
 <li>receives Messages (and queues them up if they cannot be processed yet)</li>
 <li>as available resources permit (or as they become available), sends the 'correct' message to the Gateway</li>
+</ul>
 
 <h4>Selecting the right message</h4>
 
+<ul>
 <li>Messages to the Gateway have a logical grouping and several Messages form a "group" (messages have a group ID).</li>
 <li>Messages are not guaranteed to be delivered in their groups. I.E. you might get messages from group2 before you are finished with group1</li>
 <li>Where possible, the message groups should not be interleaved...except where resources are idle and other work can be done.</li>
