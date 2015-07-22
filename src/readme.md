@@ -14,7 +14,7 @@ external resource:
 
 <ul>
 <li>send messages to be processed by calling the Gateway's send(Message msg) method:</li>
-'''java
+'''
     public interface Gateway {
 
         public void send(Message msg)
@@ -22,7 +22,7 @@ external resource:
     }
 '''
 <li>when a Message has completed processing, its completed() method will be called:</li>
-'''java
+'''
     public interface Message {
 
         public void completed()
