@@ -113,3 +113,18 @@ allow the resource scheduler to be run with this or the original algorithm easil
 
 When a Termination Message is received, that means that it is the last Message in that group (not all groups have the same number of
 messages). If further Messages belonging to that group are received, an error should be raised.
+
+-------
+<h2>My solution</h2>
+
+My solution involves creating "ExpensiveResources" class (according to how many CPUs the computer has) which perform some arbitrary process on the Message sent to it.
+
+I have only one queue of Messages (stored in Scheduler class).
+Scheduler class continuously monitors the state of the ExpensiveResources.
+If any of the resources is idle, Scheduler sends the next Message at the front of the Message queue (which is then deleted from the queue).
+If no resource is idle, Scheduler selects the next Message belonging to a specific group, according to which group the last Message to be processed belongs to.
+
+
+The problem description and suggested implementation above can be interpreted as contradictory in the sense that it states that no Message should be sent to the Gateway if no resources are available.
+If, in my solution, the number of resources is fixed and a resource is deemed "available" according to when it is idle, then Messages will only get sent when a resource is idle, such that the scenario for sending Messages will only be to send the next Message and never to select Messages of a certain group.
+Otherwise, ExpensiveResource objects should have a second availability-related property (in addition to the boolean member field "idle"), such as 'available' and might each hold their own Message queue.
