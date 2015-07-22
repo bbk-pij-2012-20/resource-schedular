@@ -14,14 +14,16 @@ external resource:
 
 <ul>
 <li>send messages to be processed by calling the Gateway's send(Message msg) method:</li>
+</ul>
 
     public interface Gateway {
 
         public void send(Message msg)
 
     }
-
+<ul>
 <li>when a Message has completed processing, its completed() method will be called:</li>
+</ul>
     public interface Message {
 
         public void completed()
