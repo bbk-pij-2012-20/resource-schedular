@@ -21,7 +21,10 @@ public class ResourceSchedulerMain {
         listOfMessages.add(new MessageGroup1("msg12"));
         listOfMessages.add(new MessageGroup1("msg13"));
 
-        Scheduler scheduler = new Scheduler(listOfMessages);
+        ExpensiveResource expensiveResource = new ExpensiveResource();
+        Gateway gateway = new GatewayImpl(expensiveResource);
+        Scheduler scheduler = new Scheduler(expensiveResource, gateway);
+        scheduler.schedule(listOfMessages);
 
         while (scheduler.hasMessagesToProcess()) {
 

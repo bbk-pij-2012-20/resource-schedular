@@ -3,33 +3,29 @@ package com.jpm.ipb;
 import java.util.LinkedList;
 import java.util.concurrent.*;
 
-public class Scheduler <T> {
+/**
+ * Scheduler holds all the logic and 'algorithms'.
+ * It stores the queue of Messages.
+ * It continuously monitors the state of the ExpensiveResources to find which, if any, are 'idle' and 'available'.
+ * According to the state of the resources, the next Message to be sent to the resources is selected and sent, via Gateway.
+ */
+public class Scheduler {
 
     private Gateway gateway;
     private LinkedList<Message> messageQueue;
-    private ExpensiveResource[] expensiveResources;
-    private ExecutorService executorService;
-    private final int NUMBER_OF_EXPENSIVE_RESOURCES = Runtime.getRuntime().availableProcessors();
     protected int groupIdOfLastMessageSent;
 
     /**
-     *
-     * @param listOfMessages  Messages
+     * @param listOfMessages Messages
      */
-    public Scheduler(LinkedList<Message> listOfMessages) {
+    public Scheduler(ExpensiveResource expensiveResource, Gateway gateway) {
 
-        gateway = new GatewayImpl();
-        messageQueue = listOfMessages;
-        groupIdOfLastMessageSent = messageQueue.getFirst().getGroupId();
-        expensiveResources = new ExpensiveResource[NUMBER_OF_EXPENSIVE_RESOURCES];
-        createThreadPool();
-        initExpensiveResources();
+        sendFirstMessages();
 
     }
 
     /**
-     *
-     * @return  returns     true if the list is not empty
+     * @return returns     true if the list is not empty
      */
     public boolean hasMessagesToProcess() {
 
@@ -38,58 +34,20 @@ public class Scheduler <T> {
     }
 
     /**
-     *
-     */
-    private void createThreadPool() {
-
-        executorService = Executors.newFixedThreadPool(NUMBER_OF_EXPENSIVE_RESOURCES);
-
-    }
-
-    /**
-     * Gives the first message in the queue to each resource.
-     * Creates a specified number of worker threads (same number as number of cpu in this pc)
-     * Using Callable, it also returns a value upon execution of the thread activity.
-     * PLEASE NOTE: my use of Callable (and therefore use of Future etc) is entirely a training exercise choice,
-     * it's completely OTT and unnecessary for the program design itself!
-     */
-    private void initExpensiveResources() {
-
-        int i = 0;
-        String returnedFromCallable = "";
-
-        try {
-
-            while (i < NUMBER_OF_EXPENSIVE_RESOURCES) {
-
-                Future<String> futRes = executorService.submit(new ExpensiveResource(messageQueue.getFirst()));
-                i++;
-                returnedFromCallable += "\n" + futRes.get(2L, TimeUnit.SECONDS);
-                // get(Long,TimeUnit)"Waits if necessary for at most the given time for the computation to complete, and then retrieves its result, if available."
-
-            }
-
-        } catch (ExecutionException | InterruptedException | TimeoutException ex) {
-
-            System.out.println(ex.getMessage());
-
-        }
-
-    }
-
-    /**
-     * checks and sends messages according to idle status of the resources
+     * Continuously monitors state of ExpensiveResources, sends messages according to idle status of the resources
      * kills the threads if there's nothing left
      */
-    public void schedule() {
+    public void schedule(LinkedList<Message> listOfMessages) {
 
-        groupIdOfLastMessageSent = messageQueue.peek().getGroupId();
+        messageQueue = listOfMessages;
 
         while (true) {
 
-            if (idleResourceFound()) {
+            for (int i = 0; i < GatewayImpl.NUMBER_OF_EXPENSIVE_RESOURCES; i++) {
 
-                sendAnyMessage();
+                if (idleResourceFound()) {
+
+                    sendAnyMessage();
 
             } else {
 
@@ -100,17 +58,28 @@ public class Scheduler <T> {
             if (messageQueue.isEmpty()) {
 
                 executorService.shutdown();
+                break;
 
             }
 
-            break;
+        }
+
+        try {
+
+            executorService.awaitTermination(2L, TimeUnit.SECONDS);
+
+        } catch (InterruptedException ie) {
+
+            System.out.println(ie.getMessage());
 
         }
+
+        System.out.println("finished all threads");
 
     }
 
     /**
-     * sends first Message found to belong to same group as most recently processed Message
+     * Sends first Message found to belong to same group as most recently processed Message
      */
     private void sendMessageOfSameGroupAsLastMessage() {
 
@@ -119,38 +88,44 @@ public class Scheduler <T> {
     }
 
     /**
-     * sends Message from front of queue regardless of group
+     * Sends Message from front of queue (regardless of the Message's group id).
      */
     private void sendAnyMessage() {
 
+        groupIdOfLastMessageSent = messageQueue.peek().getGroupId();
         gateway.send(messageQueue.pop());
 
     }
 
     /**
-     * @return  returns     Message that is the same group as the last Message to be processed.
+     * Selects next Message according to type of last Message processed (by any of the resources).
+     *
+     * @return returns     Message that is the same group as the last Message to be processed.
      */
     private Message popSameGroupAsLastMessage() {
 
-        Message result = null;
+        Message message = null;
 
         for (Message msg : messageQueue) {
 
             if (msg.getGroupId() == (groupIdOfLastMessageSent)) {
 
-                result = messageQueue.remove(messageQueue.indexOf(msg));
+                message = messageQueue.remove(messageQueue.indexOf(msg));
                 break;
 
             }
 
         }
 
-        return result;
+        groupIdOfLastMessageSent = message.getGroupId();
+        return message;
 
     }
 
     /**
-     * @return  returns     true if one of the expensive resources is currently idle
+     * Determines whether any resource is idle. (The idle property is not specific to each resource)
+     *
+     * @return returns     true if one of the expensive resources is currently idle
      */
     private boolean idleResourceFound() {
 
@@ -172,5 +147,16 @@ public class Scheduler <T> {
         return idleResourceFound;
 
     }
+
+    private void sendFirstMessages() {
+
+        for (int i = 0; i < GatewayImpl.NUMBER_OF_EXPENSIVE_RESOURCES; i++) {
+
+            sendAnyMessage();
+
+        }
+
+    }
+}
 
 }
