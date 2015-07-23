@@ -78,23 +78,22 @@ As messages are completed, if there are queued messages, they should be processe
 If there are messages belonging to multiple groups in the queue, as resources become available, we want to prioritise messages from groups
 already started.
 
-<ul>
 For a single resource, messages received:
-
+<ol>
     <li>message1 (group2)</li>
     <li>message2 (group1)</li>
     <li>message3 (group2)</li>
     <li>message4 (group3)</li>
+</ol>
+message1 (group2) was received first so will be processed first</li>
 
-<li>message1 (group2) was received first so will be processed first</li>
-
-as messages complete, the order they are sent to the gateway should be:
-
+As messages complete, the order they are sent to the gateway should be:
+<ol>
     <li>message1</li>
     <li>message3 (it's part of group2, which is already "in-progress")</li>
-    </li>message2</li>
+    <li>message2</li>
     <li>message4</li>
-</ul>
+</ol>
 
 <h3>Extra credit</h3>
 
