@@ -11,5 +11,12 @@ public interface Gateway {
 	 */
 	void send(Message message);
 
-	
+	/**
+	 *
+	 */
+	public void shutdownThreadPool();
+
+
+	public void terminateAllThreads();
+
 }

@@ -1,5 +1,8 @@
 package com.jpm.ipb;
 
+import com.sun.org.apache.bcel.internal.generic.CHECKCAST;
+
+import java.util.LinkedList;
 import java.util.concurrent.Callable;
 
 /**
@@ -7,48 +10,75 @@ import java.util.concurrent.Callable;
  */
 public class ExpensiveResource implements Callable<String> { // callable (as opposed to runnable) is not needed here but I'm using it to learn about it
 
-    private volatile boolean someResourceIsIdle;// Does using volatile here a good use of volatile ???
+    public static final int TOTAL_NUMBER_OF_EXPENSIVE_RESOURCES = Runtime.getRuntime().availableProcessors();
+    public final int MAX_SIZE_OF_MESSAGE_QUEUE = 3;
+    private int resourcesBeingUsed = 0;// Does using volatile here a good use of volatile ???
+    private LinkedList<Message> messageQueue;// should I use volatile here??
+
+     /**
+     * Constructor
+     */
+    public ExpensiveResource() {
+
+        messageQueue = new LinkedList<>();
+
+    }
 
     /**
-     * Constructor
-     * @param   msg     message to be processed
+     *
+     * @param message
      */
-    public ExpensiveResource() {}
+    public void set(Message message) {
+
+        messageQueue.add(message); // adds the message to the END of the list, i.e. back of the queue.
+        updateResourceAvailability();
+
+    }
 
     @Override
     public String call() throws Exception {
 
-       // Message[] msgList = new Message[2];//each resource is deemed 'unavailable' (by GatewayImpl) when its own list of messages, which is only 2 in size, is full
-        process(msg);
-        msg.completed();
-        someResourceIsIdle = someResourceIsIdle && true;
+        resourcesBeingUsed++;
+
+        if (resourcesBeingUsed == TOTAL_NUMBER_OF_EXPENSIVE_RESOURCES) {
+
+            SchedulerAlgorithm.StatusOfResources.thereIsAnIdleResource(false);
+
+        } else {
+
+            SchedulerAlgorithm.StatusOfResources.thereIsAnIdleResource(true);
+
+        }
+
+        process(messageQueue.getFirst());
+        updateResourceAvailability();
+        resourcesBeingUsed--;
         return "callable task reached end!";
 
     }
 
     /**
      *
-     * @return          returns true if this expensive resource is idle
      */
-    public boolean isAnyResourceIdle() {
+    private void updateResourceAvailability() {
 
-        return someResourceIsIdle;
+        SchedulerAlgorithm.StatusOfResources.thereAreNoAvailableResources(messageQueue.size() == MAX_SIZE_OF_MESSAGE_QUEUE);
 
     }
 
     /**
      *
-     * @param   msg     the Message to be processed by this resource
+     * @param   message     the Message to be processed by this resource
      */
-    public void process(Message msg) {
+    private void process(Message message) {
 
         for (int i = 0; i < 10; i++) {
 
-            System.out.println("Group: " + msg.getGroupId() + "msg#" + msg.getMessageNumber() + "...processing " + i);
+            System.out.println("Group: " + message.getGroupId() + "msg#" + message.getMessageNumber() + "...processing " + i);
 
             try {
 
-                Thread.sleep(500);
+                Thread.sleep(500); // this sleep line is just for aesthetics of the printout to console
 
             } catch (InterruptedException ie) {
 
@@ -57,6 +87,8 @@ public class ExpensiveResource implements Callable<String> { // callable (as opp
             }
 
         }
+
+        message.completed();
 
     }
 

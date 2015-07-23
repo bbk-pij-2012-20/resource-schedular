@@ -3,55 +3,45 @@ package com.jpm.ipb;
 import java.util.concurrent.*;
 
 /**
- *
+ * Responsible for creating the threads and executing the tasks
  */
 public class GatewayImpl implements Gateway {
 
     private ExpensiveResource expensiveResource;
     private ExecutorService executorService;
-    public static final int NUMBER_OF_EXPENSIVE_RESOURCES = Runtime.getRuntime().availableProcessors();
 
     public GatewayImpl(ExpensiveResource expensiveResource) {
 
         this.expensiveResource = expensiveResource;
         createThreadPool();
-        initExpensiveResources();
 
     }
 
     /**
-     *
+     *  creates the thread pool according to the fixed total number of expensive resources
      */
     private void createThreadPool() {
 
-        executorService = Executors.newFixedThreadPool(NUMBER_OF_EXPENSIVE_RESOURCES);
+        executorService = Executors.newFixedThreadPool(ExpensiveResource.TOTAL_NUMBER_OF_EXPENSIVE_RESOURCES);
 
     }
 
-    /**
-     * Initialises the ExpensiveResources with the first message in the queue to each resource.
-     * Creates a specified number of worker threads (same number as number of cpu in this pc) and submits each ExpensiveResource to thread.
-     * <p>
-     * PLEASE NOTE: my use of Callable (and therefore use of Future etc) is entirely a training exercise choice,
-     * it's completely OTT and unnecessary for the program design itself!!
-     */
-    private void initExpensiveResources() {
-
-        String returnedFromCallable = "";
-
-        for (int i = 0; i < NUMBER_OF_EXPENSIVE_RESOURCES; i++) {
-
-            expensiveResources[i] = new ExpensiveResource(messageQueue.getFirst());
-
-        }
+    /*
+    * PLEASE NOTE: my use of Callable (and therefore use of Future etc) is entirely a training exercise choice,
+    * it's completely OTT and unnecessary for the program design itself!!
+    */
+    @Override
+    public void send(Message message) {
 
         int i = 0;
+        expensiveResource.set(message);
+        String returnedFromCallable = "";
 
         try {
 
-            while (i < NUMBER_OF_EXPENSIVE_RESOURCES) {
+            while (i < ExpensiveResource.TOTAL_NUMBER_OF_EXPENSIVE_RESOURCES) {
 
-                Future<String> futRes = executorService.submit(expensiveResources[i]);
+                Future<String> futRes = executorService.submit(expensiveResource);
                 i++;
                 returnedFromCallable += "\n" + futRes.get(2L, TimeUnit.SECONDS);
                 // get(Long,TimeUnit)"Waits if necessary for at most the given time for the computation to complete, and then retrieves its result, if available."
@@ -64,12 +54,29 @@ public class GatewayImpl implements Gateway {
 
         }
 
+        System.out.println(returnedFromCallable);
+
     }
 
     @Override
-    public void send(Message message) {
+    public void shutdownThreadPool() {
 
+        executorService.shutdown();
 
+    }
+
+    @Override
+    public void terminateAllThreads() {
+
+        try {
+
+            executorService.awaitTermination(2L, TimeUnit.SECONDS);
+
+        } catch (InterruptedException ie) {
+
+            System.out.println(ie.getMessage());
+
+        }
 
     }
 
