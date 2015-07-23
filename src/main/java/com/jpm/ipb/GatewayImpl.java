@@ -18,7 +18,7 @@ public class GatewayImpl implements Gateway {
     }
 
     /**
-     *  creates the thread pool according to the fixed total number of expensive resources
+     * creates the thread pool according to the fixed total number of expensive resources
      */
     private void createThreadPool() {
 
@@ -27,8 +27,7 @@ public class GatewayImpl implements Gateway {
     }
 
     /*
-    * PLEASE NOTE: my use of Callable (and therefore use of Future etc) is entirely a training exercise choice,
-    * it's completely OTT and unnecessary for the program design itself!!
+    * NOTE: run() is sufficient. I only used call() (and therefore Future to practice playing with new stuff.
     */
     @Override
     public void send(Message message) {
@@ -36,17 +35,12 @@ public class GatewayImpl implements Gateway {
         int i = 0;
         expensiveResource.set(message);
         String returnedFromCallable = "";
+        Future<String> futRes = executorService.submit(expensiveResource);
 
         try {
 
-            while (i < ExpensiveResource.TOTAL_NUMBER_OF_EXPENSIVE_RESOURCES) {
-
-                Future<String> futRes = executorService.submit(expensiveResource);
-                i++;
-                returnedFromCallable += "\n" + futRes.get(2L, TimeUnit.SECONDS);
-                // get(Long,TimeUnit)"Waits if necessary for at most the given time for the computation to complete, and then retrieves its result, if available."
-
-            }
+            returnedFromCallable += "\n" + futRes.get(2L, TimeUnit.SECONDS);
+            // javadoc for get(Long,TimeUnit) says "Waits if necessary for at most the given time for the computation to complete, and then retrieves its result, if available.
 
         } catch (ExecutionException | InterruptedException | TimeoutException ex) {
 

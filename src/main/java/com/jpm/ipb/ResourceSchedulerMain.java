@@ -21,23 +21,22 @@ public class ResourceSchedulerMain {
     public LinkedList<Message> makeAListOfMessages() {
 
         LinkedList<Message> listOfMessages = new LinkedList<>();
-        listOfMessages.add(new MessageGroup1("msg1"));
-        listOfMessages.add(new MessageGroup2("msg2"));
-        listOfMessages.add(new MessageGroup2("msg3"));
-        listOfMessages.add(new MessageGroup2("msg4"));
-        listOfMessages.add(new MessageGroup1("msg5"));
-        listOfMessages.add(new MessageGroup1("msg6"));
-        listOfMessages.add(new MessageGroup2("msg7"));
-        listOfMessages.add(new MessageGroup1("msg8"));
-        listOfMessages.add(new MessageGroup2("msg9"));
-        listOfMessages.add(new MessageGroup1("msg10"));
-        listOfMessages.add(new MessageGroup2("msg11"));
-        listOfMessages.add(new MessageGroup1("msg12"));
-        listOfMessages.add(new MessageGroup1("msg13"));
+        listOfMessages.add(new MessageGroup2("#1"));
+        listOfMessages.add(new MessageGroup1("#2"));
+        listOfMessages.add(new MessageGroup2("#3"));
+        listOfMessages.add(new MessageGroup2("#4"));
+        listOfMessages.add(new MessageGroup1("#5"));
+        listOfMessages.add(new MessageGroup1("#6"));
+        listOfMessages.add(new MessageGroup2("#7"));
+        listOfMessages.add(new MessageGroup1("#8"));
+        listOfMessages.add(new MessageGroup2("#9"));
+        listOfMessages.add(new MessageGroup1("#10"));
+        listOfMessages.add(new MessageGroup2("#11"));
+        listOfMessages.add(new MessageGroup1("#12"));
+        listOfMessages.add(new MessageGroup1("#13"));
         return listOfMessages;
 
     }
-
 
     /**
      * launches the program
@@ -47,14 +46,8 @@ public class ResourceSchedulerMain {
 
         ExpensiveResource expensiveResource = new ExpensiveResource();
         Gateway gateway = new GatewayImpl(expensiveResource);
-        SchedulerAlgorithm schedulerAlgorithm = new SchedulerAlgorithm(expensiveResource, gateway);
+        SchedulerAlgorithm schedulerAlgorithm = new SchedulerAlgorithm(gateway);
         schedulerAlgorithm.schedule(listOfMessages);
-
-        while (schedulerAlgorithm.hasMessagesToProcess()) {
-
-            schedulerAlgorithm.schedule(listOfMessages);
-
-        }
 
     }
 

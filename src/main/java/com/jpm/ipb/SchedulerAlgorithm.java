@@ -13,31 +13,19 @@ public class SchedulerAlgorithm {
     private Gateway gateway;
     private LinkedList<Message> messageQueue;
     protected int groupIdOfLastMessageSent;
-    private ExpensiveResource expensiveResource;
     private boolean thereIsAnIdleResource;
     private boolean thereAreNoAvailableResources;
 
     /**
      * Constructor
-     * @param expensiveResource
+     *
      * @param gateway
      */
-    public SchedulerAlgorithm(ExpensiveResource expensiveResource, Gateway gateway) {
+    public SchedulerAlgorithm(Gateway gateway) {
 
         this.gateway = gateway;
-        this.expensiveResource = expensiveResource;
-        sendFirstMessages();
         thereIsAnIdleResource = true;
         thereAreNoAvailableResources = false;
-
-    }
-
-    /**
-     * @return returns     true if the list is not empty
-     */
-    public boolean hasMessagesToProcess() {
-
-        return !messageQueue.isEmpty();
 
     }
 
@@ -48,10 +36,16 @@ public class SchedulerAlgorithm {
     public void schedule(LinkedList<Message> listOfMessages) {
 
         messageQueue = listOfMessages;
+        sendFirstMessages();
 
         while (true) {
 
-            if (thereAreNoAvailableResources) {
+            if (messageQueue.isEmpty()) {
+
+                gateway.shutdownThreadPool();
+                break;
+
+            } else if (thereAreNoAvailableResources) {
 
                 try {
 
@@ -63,9 +57,7 @@ public class SchedulerAlgorithm {
 
                 }
 
-            }
-
-            if (thereIsAnIdleResource) {
+            } else if (thereIsAnIdleResource) {
 
                 sendAnyMessage();
 
@@ -75,17 +67,25 @@ public class SchedulerAlgorithm {
 
             }
 
-            if (messageQueue.isEmpty()) {
-
-                gateway.shutdownThreadPool();
-                break;
-
-            }
-
         }
 
         gateway.terminateAllThreads();
-        System.out.println("finished all threads");
+        System.out.println("This is the end. All all threads are finito");
+
+    }
+
+    /**
+     * sends the first messages to the resources
+     */
+    private void sendFirstMessages() {
+
+        System.out.println("size of queue before" + messageQueue.size());
+        for (int i = 1; i < ExpensiveResource.TOTAL_NUMBER_OF_EXPENSIVE_RESOURCES; i++) {
+
+            sendAnyMessage();
+            System.out.println("size of queue after each sendAnyMessage()" + messageQueue.size());
+
+        }
 
     }
 
@@ -117,34 +117,32 @@ public class SchedulerAlgorithm {
 
         Message message = null;
 
-        for (Message msg : messageQueue) {
+        try {
 
-            if (msg.getGroupId() == (groupIdOfLastMessageSent)) {
+            if (messageQueue == null) {
 
-                message = messageQueue.remove(messageQueue.indexOf(msg));
-                break;
+                throw new IllegalArgumentException("message list is empty");
 
             }
 
+            for (Message msg : messageQueue) {
+
+                if (msg.getGroupId() == (groupIdOfLastMessageSent)) {
+
+                    message = messageQueue.remove(messageQueue.indexOf(msg));
+                    break;
+
+                }
+
+            }
+
+        } catch (IllegalArgumentException iae) {
+
+            System.out.println(iae.getMessage());
         }
 
         groupIdOfLastMessageSent = message.getGroupId();
         return message;
-
-    }
-
-    /**
-     * sends the first messages to the resources
-     */
-    private void sendFirstMessages() {
-
-        sendAnyMessage();
-
-        for (int i = 1; i < ExpensiveResource.TOTAL_NUMBER_OF_EXPENSIVE_RESOURCES; i++) {
-
-            sendMessageOfSameGroupAsLastMessage();
-
-        }
 
     }
 
@@ -158,7 +156,8 @@ public class SchedulerAlgorithm {
 
         public StatusOfResources() {
 
-            thereIsAnIdleResource = !(thereAreNoAvailableResources = false);
+            thereIsAnIdleResource(true);
+            thereAreNoAvailableResources(false);
 
         }
 

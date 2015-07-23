@@ -3,24 +3,55 @@ package com.jpm.ipb;
 /**
  *
  */
-public interface Message {
+public abstract class Message {
+
+	private String messageNumber;
+	private boolean isCompleted;
+
+	/**
+	 * constructor
+	 * @param messageNumber
+	 */
+	public Message(String messageNumber) {
+
+		this.messageNumber = messageNumber;
+		isCompleted = false;
+
+	}
+
+	/**
+	 * default constructor
+	 */
+	public Message() {}
 
 	/**
 	 *
 	 */
-	void completed();
+	public void completed() {
+
+		isCompleted = true;
+
+	}
 
 	/**
 	 *
 	 * @return
 	 */
-	boolean isCompleted();
+	public String getCompletionStatus() {
+
+		return messageNumber + "is completed processing";
+
+	}
 
 	/**
 	 *
 	 * @return
 	 */
-	public abstract String getMessageNumber();
+	public String getMessageNumber() {
+
+		return messageNumber;
+
+	}
 
 	/**
 	 *

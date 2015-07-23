@@ -13,14 +13,14 @@ public class ExpensiveResource implements Callable<String> { // callable (as opp
     public static final int TOTAL_NUMBER_OF_EXPENSIVE_RESOURCES = Runtime.getRuntime().availableProcessors();
     public final int MAX_SIZE_OF_MESSAGE_QUEUE = 3;
     private int resourcesBeingUsed = 0;// Does using volatile here a good use of volatile ???
-    private LinkedList<Message> messageQueue;// should I use volatile here??
+    private LinkedList<Message> resourcesMessageQueue;// should I use volatile here??
 
      /**
      * Constructor
      */
     public ExpensiveResource() {
 
-        messageQueue = new LinkedList<>();
+        resourcesMessageQueue = new LinkedList<>();
 
     }
 
@@ -30,7 +30,7 @@ public class ExpensiveResource implements Callable<String> { // callable (as opp
      */
     public void set(Message message) {
 
-        messageQueue.add(message); // adds the message to the END of the list, i.e. back of the queue.
+        resourcesMessageQueue.add(message); // adds the message to the END of the list, i.e. back of the queue.
         updateResourceAvailability();
 
     }
@@ -39,11 +39,11 @@ public class ExpensiveResource implements Callable<String> { // callable (as opp
     public String call() throws Exception {
 
         resourcesBeingUsed++;
-        process(messageQueue.getFirst());
+        String completionStatus = process(resourcesMessageQueue.pop());
         updateResourceAvailability();
         resourcesBeingUsed--;
         updateResourceIdleStatus();
-        return "callable task reached end!";
+        return completionStatus;
 
     }
 
@@ -61,7 +61,7 @@ public class ExpensiveResource implements Callable<String> { // callable (as opp
      */
     private void updateResourceAvailability() {
 
-        SchedulerAlgorithm.StatusOfResources.thereAreNoAvailableResources(messageQueue.size() == MAX_SIZE_OF_MESSAGE_QUEUE);
+        SchedulerAlgorithm.StatusOfResources.thereAreNoAvailableResources(resourcesMessageQueue.size() == MAX_SIZE_OF_MESSAGE_QUEUE);
 
     }
 
@@ -69,11 +69,11 @@ public class ExpensiveResource implements Callable<String> { // callable (as opp
      *
      * @param   message     the Message to be processed by this resource
      */
-    private void process(Message message) {
+    private String process(Message message) {
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 1; i <= 5; i++) {
 
-            System.out.println("Group: " + message.getGroupId() + "msg#" + message.getMessageNumber() + "...processing " + i);
+            System.out.println("Group#" + message.getGroupId() + "   Message" + message.getMessageNumber() + "  ...processing " + i);
 
             try {
 
@@ -87,7 +87,7 @@ public class ExpensiveResource implements Callable<String> { // callable (as opp
 
         }
 
-        message.completed();
+        return message.getCompletionStatus();
 
     }
 
