@@ -4,6 +4,8 @@ import com.sun.org.apache.bcel.internal.generic.CHECKCAST;
 
 import java.util.LinkedList;
 import java.util.concurrent.Callable;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Represents the expensive resource.
@@ -12,15 +14,16 @@ public class ExpensiveResource implements Callable<String> { // callable (as opp
 
     public static final int TOTAL_NUMBER_OF_EXPENSIVE_RESOURCES = Runtime.getRuntime().availableProcessors();
     public final int MAX_SIZE_OF_MESSAGE_QUEUE = 3;
-    private int resourcesBeingUsed = 0;// Does using volatile here a good use of volatile ???
-    private LinkedList<Message> resourcesMessageQueue;// should I use volatile here??
+    private AtomicInteger numberOfResourcesBeingUsed;// use AtomicInteger, definitely not volatile
+    private LinkedBlockingQueue<Message> resourcesMessageQueue;//
 
      /**
      * Constructor
      */
     public ExpensiveResource() {
 
-        resourcesMessageQueue = new LinkedList<>();
+        resourcesMessageQueue = new LinkedBlockingQueue<>();
+        numberOfResourcesBeingUsed = new AtomicInteger(0);
 
     }
 
@@ -38,30 +41,32 @@ public class ExpensiveResource implements Callable<String> { // callable (as opp
     @Override
     public String call() throws Exception {
 
-        resourcesBeingUsed++;
-        String completionStatus = process(resourcesMessageQueue.pop());
+        int incrementedNumberOfResourcesBeingUsed = numberOfResourcesBeingUsed.getAndIncrement();
+        numberOfResourcesBeingUsed.compareAndSet(numberOfResourcesBeingUsed.get(), incrementedNumberOfResourcesBeingUsed);
+        String completionStatus = process(resourcesMessageQueue.poll());
         updateResourceAvailability();
-        resourcesBeingUsed--;
+        int decrementedNumberOfResourcesBeingUsed = numberOfResourcesBeingUsed.getAndDecrement();
+        numberOfResourcesBeingUsed.compareAndSet(numberOfResourcesBeingUsed.get(), decrementedNumberOfResourcesBeingUsed);
         updateResourceIdleStatus();
         return completionStatus;
 
     }
 
     /**
-     * updates SchedulerAlgorithm on idle status of the resources
+     * updates SchedulingAlgorithm on idle status of the resources
      */
     private void updateResourceIdleStatus() {
 
-        SchedulerAlgorithm.StatusOfResources.thereIsAnIdleResource(resourcesBeingUsed != TOTAL_NUMBER_OF_EXPENSIVE_RESOURCES);
+        SchedulingAlgorithm.StatusOfResources.thereIsAnIdleResource(numberOfResourcesBeingUsed.get() != TOTAL_NUMBER_OF_EXPENSIVE_RESOURCES);
 
     }
 
     /**
-     * updates SchedulerAlgorithm on availability of the resources
+     * updates SchedulingAlgorithm on availability of the resources
      */
     private void updateResourceAvailability() {
 
-        SchedulerAlgorithm.StatusOfResources.thereAreNoAvailableResources(resourcesMessageQueue.size() == MAX_SIZE_OF_MESSAGE_QUEUE);
+        SchedulingAlgorithm.StatusOfResources.thereAreNoAvailableResources(resourcesMessageQueue.size() == MAX_SIZE_OF_MESSAGE_QUEUE);
 
     }
 

@@ -1,17 +1,17 @@
 package com.jpm.ipb;
 
-import java.util.LinkedList;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
- * SchedulerAlgorithm is responsible for selecting which Message should be processed next.
+ * SchedulingAlgorithm is responsible for selecting which Message should be processed next.
  * It stores the queue of Messages.
  * It is continuously updated by the ExpensiveResources on their status in terms of availability and if any are idle.
  */
-public class SchedulerAlgorithm {
+public class SchedulingAlgorithm {
 
     private Gateway gateway;
-    private LinkedList<Message> messageQueue;
+    private Queue<Message> messageQueue;
     protected int groupIdOfLastMessageSent;
     private boolean thereIsAnIdleResource;
     private boolean thereAreNoAvailableResources;
@@ -21,7 +21,7 @@ public class SchedulerAlgorithm {
      *
      * @param gateway
      */
-    public SchedulerAlgorithm(Gateway gateway) {
+    public SchedulingAlgorithm(Gateway gateway) {
 
         this.gateway = gateway;
         thereIsAnIdleResource = true;
@@ -33,10 +33,11 @@ public class SchedulerAlgorithm {
      * Continuously monitors state of ExpensiveResources, sends messages according to idle status of the resources
      * kills the threads if there's nothing left
      */
-    public void schedule(LinkedList<Message> listOfMessages) {
+    public void schedule(Queue<Message> listOfMessages) {
 
         messageQueue = listOfMessages;
         sendFirstMessages();
+        sortRemainingMessagesIntoDifferentGroupLists();
 
         while (true) {
 
@@ -79,11 +80,35 @@ public class SchedulerAlgorithm {
      */
     private void sendFirstMessages() {
 
-        System.out.println("size of queue before" + messageQueue.size());
         for (int i = 1; i < ExpensiveResource.TOTAL_NUMBER_OF_EXPENSIVE_RESOURCES; i++) {
 
             sendAnyMessage();
-            System.out.println("size of queue after each sendAnyMessage()" + messageQueue.size());
+
+        }
+
+    }
+
+    /**
+     *
+     */
+    public void sortRemainingMessagesIntoDifferentGroupLists() {
+
+        Iterator<Message> msgQueue = messageQueue.iterator();
+        Map<Integer, Message> groupedMessageQueue = new ConcurrentHashMap<>();
+
+        while (msgQueue.hasNext()) {
+
+            Message msg = msgQueue.next();
+
+            if (groupedMessageQueue.containsKey(msg.getGroupId())) {
+//TODO
+                groupedMessageQueue.put(msg.getGroupId(), msg); // need to put group id number with a list of messages that have that same id number
+
+            } else {
+
+
+
+            }
 
         }
 
@@ -104,7 +129,16 @@ public class SchedulerAlgorithm {
     private void sendAnyMessage() {
 
         groupIdOfLastMessageSent = messageQueue.peek().getGroupId();
-        gateway.send(messageQueue.pop());
+
+        try {
+
+            gateway.send(messageQueue.remove());// retrieves and removes the head of this queue
+
+        } catch (NoSuchElementException nse) {
+
+            nse.printStackTrace();
+
+        }
 
     }
 
