@@ -6,7 +6,7 @@ import java.util.LinkedList;
 import java.util.concurrent.Callable;
 
 /**
- *
+ * Represents the expensive resource.
  */
 public class ExpensiveResource implements Callable<String> { // callable (as opposed to runnable) is not needed here but I'm using it to learn about it
 
@@ -39,26 +39,25 @@ public class ExpensiveResource implements Callable<String> { // callable (as opp
     public String call() throws Exception {
 
         resourcesBeingUsed++;
-
-        if (resourcesBeingUsed == TOTAL_NUMBER_OF_EXPENSIVE_RESOURCES) {
-
-            SchedulerAlgorithm.StatusOfResources.thereIsAnIdleResource(false);
-
-        } else {
-
-            SchedulerAlgorithm.StatusOfResources.thereIsAnIdleResource(true);
-
-        }
-
         process(messageQueue.getFirst());
         updateResourceAvailability();
         resourcesBeingUsed--;
+        updateResourceIdleStatus();
         return "callable task reached end!";
 
     }
 
     /**
-     *
+     * updates SchedulerAlgorithm on idle status of the resources
+     */
+    private void updateResourceIdleStatus() {
+
+        SchedulerAlgorithm.StatusOfResources.thereIsAnIdleResource(resourcesBeingUsed != TOTAL_NUMBER_OF_EXPENSIVE_RESOURCES);
+
+    }
+
+    /**
+     * updates SchedulerAlgorithm on availability of the resources
      */
     private void updateResourceAvailability() {
 

@@ -2,6 +2,9 @@ package com.jpm.ipb;
 
 import java.util.LinkedList;
 
+/**
+ * main method, launcher
+ */
 public class ResourceSchedulerMain {
 
     public static void main(String[] args) {
