@@ -79,7 +79,7 @@ If there are messages belonging to multiple groups in the queue, as resources be
 already started.
 
 <ul>
-<li>For a single resource, messages received:</li>
+For a single resource, messages received:
 
     <li>message1 (group2)</li>
     <li>message2 (group1)</li>
@@ -87,7 +87,8 @@ already started.
     <li>message4 (group3)</li>
 
 <li>message1 (group2) was received first so will be processed first</li>
-<li>as messages complete, the order they are sent to the gateway should be:</li>
+
+as messages complete, the order they are sent to the gateway should be:
 
     <li>message1</li>
     <li>message3 (it's part of group2, which is already "in-progress")</li>
