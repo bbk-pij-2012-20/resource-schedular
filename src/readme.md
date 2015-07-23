@@ -117,14 +117,15 @@ messages). If further Messages belonging to that group are received, an error sh
 -------
 <h2>My solution</h2>
 
-My solution involves creating "ExpensiveResources" class (according to how many CPUs the computer has) which perform some arbitrary process on the Message sent to it.
+I have separated out responsibility to the following classes:
+<ul>
+<li>SchedulerAlgorithm</li>
+<li>Gateway</li>
+<li>Message</li>
+<li>ExpensiveResource</li>
+</ul>
 
-I have only one queue of Messages (stored in Scheduler class).
-Scheduler class continuously monitors the state of the ExpensiveResources.
-If any of the resources is idle, Scheduler sends the next Message at the front of the Message queue (which is then deleted from the queue).
-If no resource is idle, Scheduler selects the next Message belonging to a specific group, according to which group the last Message to be processed belongs to.
-
-
-The problem description and suggested implementation above can be interpreted as contradictory in the sense that it states that no Message should be sent to the Gateway if no resources are available.
-If, in my solution, the number of resources is fixed and a resource is deemed "available" according to when it is idle, then Messages will only get sent when a resource is idle, such that the scenario for sending Messages will only be to send the next Message and never to select Messages of a certain group.
-Otherwise, ExpensiveResource objects should have a second availability-related property (in addition to the boolean member field "idle"), such as 'available' and might each hold their own Message queue.
+SchedulerAlgorithm is responsible for deciding which message is sent to the resource(s) where it will be processed, via Gateway.
+Gateway is responsible for facilitating asynchronous processing of messages sent from SchedulerAlgorithm by creating a threadpool and execute message processing in separate tasks.
+Message represents each message and stores information about which group each message belongs to.
+ExpensiveResource represents the resource(s) which process the message(s) and should not be left idle while there are still messages to be processed.
