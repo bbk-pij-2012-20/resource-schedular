@@ -125,7 +125,10 @@ I have separated out responsibility to the following classes:
 <li>ExpensiveResource</li>
 </ul>
 
-SchedulerAlgorithm is responsible for deciding which message is sent to the resource(s) where it will be processed, via Gateway.
-Gateway is responsible for facilitating asynchronous processing of messages sent from SchedulerAlgorithm by creating a threadpool and execute message processing in separate tasks.
-Message represents each message and stores information about which group each message belongs to.
-ExpensiveResource represents the resource(s) which process the message(s) and should not be left idle while there are still messages to be processed.
+<b>SchedulerAlgorithm</b></br> is responsible for deciding which message is sent to the resource(s) where it will be processed, via Gateway.
+
+<b>Gateway</b></br> is responsible for facilitating asynchronous processing of messages sent from SchedulerAlgorithm by creating a threadpool and execute message processing in separate tasks.
+
+<b>Message</b></br> represents each message and stores information about which group each message belongs to.
+
+<b>ExpensiveResource</b></br> represents the resource(s) which process the message(s) and should not be left idle while there are still messages to be processed.
