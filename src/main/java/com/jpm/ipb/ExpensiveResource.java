@@ -1,8 +1,5 @@
 package com.jpm.ipb;
 
-import com.sun.org.apache.bcel.internal.generic.CHECKCAST;
-
-import java.util.LinkedList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -14,8 +11,9 @@ public class ExpensiveResource implements Callable<String> { // callable (as opp
 
     public static final int TOTAL_NUMBER_OF_EXPENSIVE_RESOURCES = Runtime.getRuntime().availableProcessors();
     public final int MAX_SIZE_OF_MESSAGE_QUEUE = 3;
-    private AtomicInteger numberOfResourcesBeingUsed;// use AtomicInteger, definitely not volatile
-    private LinkedBlockingQueue<Message> resourcesMessageQueue;//
+    private AtomicInteger numberOfResourcesInUse;// use AtomicInteger, definitely not volatile
+    private LinkedBlockingQueue<Message> resourcesMessageQueue;
+    private long lastTimePoint;
 
      /**
      * Constructor
@@ -23,7 +21,10 @@ public class ExpensiveResource implements Callable<String> { // callable (as opp
     public ExpensiveResource() {
 
         resourcesMessageQueue = new LinkedBlockingQueue<>();
-        numberOfResourcesBeingUsed = new AtomicInteger(0);
+        numberOfResourcesInUse = new AtomicInteger(0);
+        lastTimePoint = 0;
+        updateResourceAvailability();
+        updateResourceIdleStatus();
 
     }
 
@@ -41,12 +42,12 @@ public class ExpensiveResource implements Callable<String> { // callable (as opp
     @Override
     public String call() throws Exception {
 
-        int incrementedNumberOfResourcesBeingUsed = numberOfResourcesBeingUsed.getAndIncrement();
-        numberOfResourcesBeingUsed.compareAndSet(numberOfResourcesBeingUsed.get(), incrementedNumberOfResourcesBeingUsed);
+        int incrementedNumberOfResourcesBeingUsed = numberOfResourcesInUse.getAndIncrement();
+        numberOfResourcesInUse.compareAndSet(numberOfResourcesInUse.get(), incrementedNumberOfResourcesBeingUsed);
         String completionStatus = process(resourcesMessageQueue.poll());
         updateResourceAvailability();
-        int decrementedNumberOfResourcesBeingUsed = numberOfResourcesBeingUsed.getAndDecrement();
-        numberOfResourcesBeingUsed.compareAndSet(numberOfResourcesBeingUsed.get(), decrementedNumberOfResourcesBeingUsed);
+        int decrementedNumberOfResourcesBeingUsed = numberOfResourcesInUse.getAndDecrement();
+        numberOfResourcesInUse.compareAndSet(numberOfResourcesInUse.get(), decrementedNumberOfResourcesBeingUsed);
         updateResourceIdleStatus();
         return completionStatus;
 
@@ -57,7 +58,8 @@ public class ExpensiveResource implements Callable<String> { // callable (as opp
      */
     private void updateResourceIdleStatus() {
 
-        SchedulingAlgorithm.StatusOfResources.thereIsAnIdleResource(numberOfResourcesBeingUsed.get() != TOTAL_NUMBER_OF_EXPENSIVE_RESOURCES);
+        System.out.println("updateresourceidle method");
+        SchedulingAlgorithm.StatusOfResources.thereIsAnIdleResource(numberOfResourcesInUse.get() != TOTAL_NUMBER_OF_EXPENSIVE_RESOURCES);
 
     }
 
@@ -65,7 +67,8 @@ public class ExpensiveResource implements Callable<String> { // callable (as opp
      * updates SchedulingAlgorithm on availability of the resources
      */
     private void updateResourceAvailability() {
-
+        System.out.println("updateresourceAVAILIBILITY method");
+        System.out.println("true or false: "+(resourcesMessageQueue.size() == MAX_SIZE_OF_MESSAGE_QUEUE));
         SchedulingAlgorithm.StatusOfResources.thereAreNoAvailableResources(resourcesMessageQueue.size() == MAX_SIZE_OF_MESSAGE_QUEUE);
 
     }
@@ -76,19 +79,15 @@ public class ExpensiveResource implements Callable<String> { // callable (as opp
      */
     private String process(Message message) {
 
-        for (int i = 1; i <= 5; i++) {
+        long latestIncrease, currentTime = 0;
 
-            System.out.println("Group#" + message.getGroupId() + "   Message" + message.getMessageNumber() + "  ...processing " + i);
+        for (int i = 1; i <= 1; i++) {
 
-            try {
-
-                Thread.sleep(500); // this sleep line is just for aesthetics of the printout to console
-
-            } catch (InterruptedException ie) {
-
-                ie.printStackTrace();
-
-            }
+            currentTime = System.nanoTime();
+            latestIncrease = currentTime - lastTimePoint;
+            System.out.println("Group#" + message.getGroupId() + "   Message" + message.getMessageNumber() + "  ...processing " + i + ". Time taken: " + latestIncrease + " ns");
+            lastTimePoint = currentTime;
+            message.completed();
 
         }
 

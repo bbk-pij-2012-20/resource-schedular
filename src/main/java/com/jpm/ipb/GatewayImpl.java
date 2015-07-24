@@ -39,12 +39,11 @@ public class GatewayImpl implements Gateway {
 
         try {
 
-            returnedFromCallable += "\n" + futRes.get(2L, TimeUnit.SECONDS);
-            // javadoc for get(Long,TimeUnit) says "Waits if necessary for at most the given time for the computation to complete, and then retrieves its result, if available.
+            returnedFromCallable += "\n" + futRes.get();
 
-        } catch (ExecutionException | InterruptedException | TimeoutException ex) {
+        } catch (ExecutionException | InterruptedException ex) {
 
-            System.out.println(ex.getMessage());
+            System.out.println("exception");
 
         }
 

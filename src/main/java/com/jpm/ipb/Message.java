@@ -25,7 +25,7 @@ public abstract class Message {
 	public Message() {}
 
 	/**
-	 *
+	 * sets the completed flag to true
 	 */
 	public void completed() {
 
@@ -34,18 +34,18 @@ public abstract class Message {
 	}
 
 	/**
-	 *
+	 * provides information on whether a message has been processed or not yet.
 	 * @return
 	 */
 	public String getCompletionStatus() {
 
-		return messageNumber + "is completed processing";
+		return "message " + messageNumber + (isCompleted? " has completed processing\n": "not completed yet\n");
 
 	}
 
 	/**
 	 *
-	 * @return
+	 * @return	the message number
 	 */
 	public String getMessageNumber() {
 
@@ -55,7 +55,7 @@ public abstract class Message {
 
 	/**
 	 *
-	 * @return
+	 * @return	the group id number
 	 */
 	public abstract int getGroupId();
 

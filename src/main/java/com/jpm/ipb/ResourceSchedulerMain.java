@@ -1,7 +1,6 @@
 package com.jpm.ipb;
 
 import java.util.LinkedList;
-import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -20,9 +19,9 @@ public class ResourceSchedulerMain {
      * makes a list of messages
      * @return
      */
-    public Queue<Message> makeAListOfMessages() {
+    public LinkedList<Message> makeAListOfMessages() {
 
-        Queue<Message> listOfMessages = new LinkedBlockingQueue<>();
+        LinkedList<Message> listOfMessages = new LinkedList<>();
         listOfMessages.add(new MessageGroup2("#1"));
         listOfMessages.add(new MessageGroup1("#2"));
         listOfMessages.add(new MessageGroup2("#3"));
@@ -44,7 +43,7 @@ public class ResourceSchedulerMain {
      * launches the program
      * @param listOfMessages
      */
-    public void launch(Queue<Message> listOfMessages) {
+    public void launch(LinkedList<Message> listOfMessages) {
 
         ExpensiveResource expensiveResource = new ExpensiveResource();
         Gateway gateway = new GatewayImpl(expensiveResource);

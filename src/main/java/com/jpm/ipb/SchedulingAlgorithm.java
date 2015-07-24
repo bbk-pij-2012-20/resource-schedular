@@ -1,7 +1,8 @@
 package com.jpm.ipb;
 
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.LinkedList;
+import java.util.NoSuchElementException;
+
 
 /**
  * SchedulingAlgorithm is responsible for selecting which Message should be processed next.
@@ -11,7 +12,7 @@ import java.util.concurrent.*;
 public class SchedulingAlgorithm {
 
     private Gateway gateway;
-    private Queue<Message> messageQueue;
+    private LinkedList<Message> messageQueue;
     protected int groupIdOfLastMessageSent;
     private boolean thereIsAnIdleResource;
     private boolean thereAreNoAvailableResources;
@@ -33,20 +34,22 @@ public class SchedulingAlgorithm {
      * Continuously monitors state of ExpensiveResources, sends messages according to idle status of the resources
      * kills the threads if there's nothing left
      */
-    public void schedule(Queue<Message> listOfMessages) {
+    public void schedule(LinkedList<Message> listOfMessages) {
 
         messageQueue = listOfMessages;
         sendFirstMessages();
-        sortRemainingMessagesIntoDifferentGroupLists();
 
         while (true) {
 
             if (messageQueue.isEmpty()) {
 
+                System.out.println("message queue is empty. End it\n");
                 gateway.shutdownThreadPool();
                 break;
 
             } else if (thereAreNoAvailableResources) {
+
+                System.out.println("no available resources");
 
                 try {
 
@@ -60,10 +63,12 @@ public class SchedulingAlgorithm {
 
             } else if (thereIsAnIdleResource) {
 
+                System.out.println("idle resource found");
                 sendAnyMessage();
 
             } else {
 
+                System.out.println("no idle resources. Available resources.");
                 sendMessageOfSameGroupAsLastMessage();
 
             }
@@ -71,7 +76,7 @@ public class SchedulingAlgorithm {
         }
 
         gateway.terminateAllThreads();
-        System.out.println("This is the end. All all threads are finito");
+        System.out.println("This is the end, my beautiful friend");
 
     }
 
@@ -80,35 +85,11 @@ public class SchedulingAlgorithm {
      */
     private void sendFirstMessages() {
 
+        sendAnyMessage();
+
         for (int i = 1; i < ExpensiveResource.TOTAL_NUMBER_OF_EXPENSIVE_RESOURCES; i++) {
 
-            sendAnyMessage();
-
-        }
-
-    }
-
-    /**
-     *
-     */
-    public void sortRemainingMessagesIntoDifferentGroupLists() {
-
-        Iterator<Message> msgQueue = messageQueue.iterator();
-        Map<Integer, Message> groupedMessageQueue = new ConcurrentHashMap<>();
-
-        while (msgQueue.hasNext()) {
-
-            Message msg = msgQueue.next();
-
-            if (groupedMessageQueue.containsKey(msg.getGroupId())) {
-//TODO
-                groupedMessageQueue.put(msg.getGroupId(), msg); // need to put group id number with a list of messages that have that same id number
-
-            } else {
-
-
-
-            }
+            sendMessageOfSameGroupAsLastMessage();
 
         }
 
@@ -149,11 +130,11 @@ public class SchedulingAlgorithm {
      */
     private Message popSameGroupAsLastMessage() {
 
-        Message message = null;
+        Message message = messageQueue.getFirst();
 
         try {
 
-            if (messageQueue == null) {
+            if (messageQueue.isEmpty()) {
 
                 throw new IllegalArgumentException("message list is empty");
 
@@ -161,7 +142,7 @@ public class SchedulingAlgorithm {
 
             for (Message msg : messageQueue) {
 
-                if (msg.getGroupId() == (groupIdOfLastMessageSent)) {
+                if (msg.getGroupId() == groupIdOfLastMessageSent) {
 
                     message = messageQueue.remove(messageQueue.indexOf(msg));
                     break;
@@ -173,6 +154,7 @@ public class SchedulingAlgorithm {
         } catch (IllegalArgumentException iae) {
 
             System.out.println(iae.getMessage());
+
         }
 
         groupIdOfLastMessageSent = message.getGroupId();
