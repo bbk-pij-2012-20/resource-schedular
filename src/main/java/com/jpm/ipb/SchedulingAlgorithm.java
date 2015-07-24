@@ -38,7 +38,8 @@ public class SchedulingAlgorithm {
 
         messageQueue = listOfMessages;
         sendFirstMessages();
-
+//--------------------or you should probably put the whole of this while loop inside a run() method ------
+        // so basically it keeps checking the status of the resources and sends messages accordingly
         while (!messageQueue.isEmpty()) {
 
             if (thereAreNoAvailableResources) {
@@ -63,7 +64,7 @@ public class SchedulingAlgorithm {
             } else {
 
                 System.out.println("no idle resources. Available resources.");
-                sendMessageOfSameGroupAsLastMessage();
+                sendMessageOfSameGroupAsLastMessage();// execute
 
             }
 
