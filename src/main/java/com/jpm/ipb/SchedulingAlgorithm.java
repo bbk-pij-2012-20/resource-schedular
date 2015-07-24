@@ -39,15 +39,9 @@ public class SchedulingAlgorithm {
         messageQueue = listOfMessages;
         sendFirstMessages();
 
-        while (true) {
+        while (!messageQueue.isEmpty()) {
 
-            if (messageQueue.isEmpty()) {
-
-                System.out.println("message queue is empty. End it\n");
-                gateway.shutdownThreadPool();
-                break;
-
-            } else if (thereAreNoAvailableResources) {
+            if (thereAreNoAvailableResources) {
 
                 System.out.println("no available resources");
 
@@ -64,7 +58,7 @@ public class SchedulingAlgorithm {
             } else if (thereIsAnIdleResource) {
 
                 System.out.println("idle resource found");
-                sendAnyMessage();
+                sendAnyMessage();// this needs to be execute.. to launch a thread
 
             } else {
 
@@ -75,6 +69,7 @@ public class SchedulingAlgorithm {
 
         }
 
+        gateway.shutdownThreadPool();
         gateway.terminateAllThreads();
         System.out.println("This is the end, my beautiful friend");
 
