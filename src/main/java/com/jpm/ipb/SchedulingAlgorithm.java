@@ -1,7 +1,16 @@
 package com.jpm.ipb;
 
+
+import javafx.beans.binding.IntegerExpression;
+
+import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.NoSuchElementException;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -12,35 +21,51 @@ import java.util.NoSuchElementException;
 public class SchedulingAlgorithm {
 
     private Gateway gateway;
-    private LinkedList<Message> messageQueue;
-    protected int groupIdOfLastMessageSent;
-    private boolean thereIsAnIdleResource;
-    private boolean thereAreNoAvailableResources;
+    public static int NUMBER_OF_DIFFERENT_GROUPS = 4;
+    private int numberOfResources;
+    private Messages messages;
+    private ResourceStatus resourceStatus;
+    private ExecutorService executorService;
 
     /**
      * Constructor
-     *
      * @param gateway
      */
-    public SchedulingAlgorithm(Gateway gateway) {
+    public SchedulingAlgorithm(int numberOfResources, Gateway gateway, Messages messages) {
 
         this.gateway = gateway;
-        thereIsAnIdleResource = true;
-        thereAreNoAvailableResources = false;
+        this.messages = messages;
+        this.numberOfResources = numberOfResources;
+        resourceStatus = new ResourceStatus();
+        createThreadPool();
 
     }
 
+
     /**
+     * creates the thread pool according to the fixed total number of expensive resources
+     */
+    private void createThreadPool() {
+
+        executorService = Executors.newFixedThreadPool(numberOfResources);
+
+    }
+
+
+    /**
+     * called by Schedular Main method
+     * generates a thread pool.
      * Continuously monitors state of ExpensiveResources, sends messages according to idle status of the resources
      * kills the threads if there's nothing left
      */
     public void schedule(LinkedList<Message> listOfMessages) {
 
         messageQueue = listOfMessages;
-        sendFirstMessages();
-//--------------------or you should probably put the whole of this while loop inside a run() method ------
-        // so basically it keeps checking the status of the resources and sends messages accordingly
+
         while (!messageQueue.isEmpty()) {
+
+            gateway.send(messageQueue.poll());
+            readyQueue.add(getMessageOfCurrentGroup());
 
             if (thereAreNoAvailableResources) {
 
@@ -56,66 +81,48 @@ public class SchedulingAlgorithm {
 
                 }
 
-            } else if (thereIsAnIdleResource) {
-
-                System.out.println("idle resource found");
-                sendAnyMessage();// this needs to be execute.. to launch a thread
-
             } else {
 
-                System.out.println("no idle resources. Available resources.");
-                sendMessageOfSameGroupAsLastMessage();// execute
+                System.out.println("idle resource found");
+                Callable<String> schedule = new Schedule<String>();
+                executorService.submit(schedule);
 
             }
 
         }
 
-        gateway.shutdownThreadPool();
-        gateway.terminateAllThreads();
+        shutdownThreadPool();
+        terminateAllThreads();
         System.out.println("This is the end, my beautiful friend");
 
-    }
+        class Schedule implements Callable<String> {
 
-    /**
-     * sends the first messages to the resources
-     */
-    private void sendFirstMessages() {
+            public Schedule(){}
 
-        sendAnyMessage();
+            @Override
+            public String call() throws Exception {
 
-        for (int i = 1; i < ExpensiveResource.TOTAL_NUMBER_OF_EXPENSIVE_RESOURCES; i++) {
+                send();
 
-            sendMessageOfSameGroupAsLastMessage();
+            }
 
         }
 
     }
 
-    /**
-     * Sends first Message found to belong to same group as most recently processed Message
-     */
-    private void sendMessageOfSameGroupAsLastMessage() {
+    private void sendAppropriateMessage() {
 
-        gateway.send(popSameGroupAsLastMessage());
+        if (thereIsAnIdleResource) {
+
+            send();
+
+        }
 
     }
 
-    /**
-     * Sends Message from front of queue (regardless of the Message's group id).
-     */
-    private void sendAnyMessage() {
+    private Message getNextMessage() {
 
-        groupIdOfLastMessageSent = messageQueue.peek().getGroupId();
-
-        try {
-
-            gateway.send(messageQueue.remove());// retrieves and removes the head of this queue
-
-        } catch (NoSuchElementException nse) {
-
-            nse.printStackTrace();
-
-        }
+        return messageQueue.remove();
 
     }
 
@@ -124,9 +131,8 @@ public class SchedulingAlgorithm {
      *
      * @return returns     Message that is the same group as the last Message to be processed.
      */
-    private Message popSameGroupAsLastMessage() {
+    private Message getMessageOfCurrentGroup() {
 
-        Message message = messageQueue.getFirst();
 
         try {
 
@@ -158,36 +164,23 @@ public class SchedulingAlgorithm {
 
     }
 
-    /**
-     * nested class holding status of resources.
-     */
-    protected static class StatusOfResources {
 
-        private static boolean thereAreNoAvailableResources;
-        private static boolean thereIsAnIdleResource;
+    public void shutdownThreadPool() {
 
-        public StatusOfResources() {
+        executorService.shutdown();
 
-            thereIsAnIdleResource(true);
-            thereAreNoAvailableResources(false);
+    }
 
-        }
 
-        /**
-         * only called by ExpensiveResources
-         */
-        public static synchronized void thereIsAnIdleResource(boolean trueFalse) {
+    public void terminateAllThreads() {
 
-            thereIsAnIdleResource = trueFalse;
+        try {
 
-        }
+            executorService.awaitTermination(2L, TimeUnit.SECONDS);
 
-        /**
-         * only called by ExpensiveResources
-         */
-        public static synchronized void thereAreNoAvailableResources(boolean trueFalse) {
+        } catch (InterruptedException ie) {
 
-            thereAreNoAvailableResources = trueFalse;
+            System.out.println(ie.getMessage());
 
         }
 

@@ -1,6 +1,5 @@
 package com.jpm.ipb;
 
-import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -9,7 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class ExpensiveResource implements Callable<String> { // callable (as opposed to runnable) is not needed here but I'm using it to learn about it
 
-    public static final int TOTAL_NUMBER_OF_EXPENSIVE_RESOURCES = Runtime.getRuntime().availableProcessors();
+
     public final int MAX_SIZE_OF_MESSAGE_QUEUE = 3;
     private AtomicInteger numberOfResourcesInUse;// use AtomicInteger, definitely not volatile
     private LinkedBlockingQueue<Message> resourcesMessageQueue;
@@ -32,24 +31,10 @@ public class ExpensiveResource implements Callable<String> { // callable (as opp
      *
      * @param message
      */
-    public void set(Message message) {
+    public void add(Message message) {
 
         resourcesMessageQueue.add(message); // adds the message to the END of the list, i.e. back of the queue.
         updateResourceAvailability();
-
-    }
-
-    @Override
-    public String call() throws Exception {
-
-        int incrementedNumberOfResourcesBeingUsed = numberOfResourcesInUse.getAndIncrement();
-        numberOfResourcesInUse.compareAndSet(numberOfResourcesInUse.get(), incrementedNumberOfResourcesBeingUsed);
-        String completionStatus = process(resourcesMessageQueue.poll());
-        updateResourceAvailability();
-        int decrementedNumberOfResourcesBeingUsed = numberOfResourcesInUse.getAndDecrement();
-        numberOfResourcesInUse.compareAndSet(numberOfResourcesInUse.get(), decrementedNumberOfResourcesBeingUsed);
-        updateResourceIdleStatus();
-        return completionStatus;
 
     }
 
@@ -59,7 +44,7 @@ public class ExpensiveResource implements Callable<String> { // callable (as opp
     private void updateResourceIdleStatus() {
 
         System.out.println("updateresourceidle method");
-        SchedulingAlgorithm.StatusOfResources.thereIsAnIdleResource(numberOfResourcesInUse.get() != TOTAL_NUMBER_OF_EXPENSIVE_RESOURCES);
+        SchedulingAlgorithm.StatusOfResources.thereIsAnIdleResource(numberOfResourcesInUse.get() != SchedulingAlgorithm.TOTAL_NUMBER_OF_EXPENSIVE_RESOURCES);
 
     }
 
@@ -77,21 +62,28 @@ public class ExpensiveResource implements Callable<String> { // callable (as opp
      *
      * @param   message     the Message to be processed by this resource
      */
-    private String process(Message message) {
+    private String process() {
 
         long latestIncrease, currentTime = 0;
+        int incrementedNumberOfResourcesBeingUsed = numberOfResourcesInUse.getAndIncrement();
+        numberOfResourcesInUse.compareAndSet(numberOfResourcesInUse.get(), incrementedNumberOfResourcesBeingUsed);
+        updateResourceAvailability();
+        int decrementedNumberOfResourcesBeingUsed = numberOfResourcesInUse.getAndDecrement();
+        numberOfResourcesInUse.compareAndSet(numberOfResourcesInUse.get(), decrementedNumberOfResourcesBeingUsed);
+        updateResourceIdleStatus();
+        Message messageBeingProcessed = resourcesMessageQueue.poll();
 
         for (int i = 1; i <= 1; i++) {
 
             currentTime = System.nanoTime();
             latestIncrease = currentTime - lastTimePoint;
-            System.out.println("Group#" + message.getGroupId() + "   Message" + message.getMessageNumber() + "  ...processing " + i + ". Time taken: " + latestIncrease + " ns");
+            System.out.println("Group#" + messageBeingProcessed.getGroupId() + "   Message" + messageBeingProcessed.getMessageNumber() + "  ...processing " + i + ". Time taken: " + latestIncrease + " ns");
             lastTimePoint = currentTime;
-            message.completed();
+            messageBeingProcessed.completed();
 
         }
 
-        return message.getCompletionStatus();
+        return messageBeingProcessed.getCompletionStatus();
 
     }
 
