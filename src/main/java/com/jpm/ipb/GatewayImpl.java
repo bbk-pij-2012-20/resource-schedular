@@ -30,7 +30,7 @@ public class GatewayImpl implements Gateway, Callable<String> {
     public void send(Message message) {
 
         int i = 0;
-        expensiveResource.set(message);
+        expensiveResource.add(message);
         String returnedFromCallable = "";
         Future<String> futRes = executorService.submit(expensiveResource);
 

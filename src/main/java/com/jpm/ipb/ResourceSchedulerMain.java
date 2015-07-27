@@ -22,7 +22,7 @@ public class ResourceSchedulerMain {
     public void launch() {
 
         Messages messages = new Messages();
-        ExpensiveResource expensiveResource = new ExpensiveResource();
+        ExpensiveResource expensiveResource = new ExpensiveResource(Runtime.getRuntime().availableProcessors());
         Gateway gateway = new GatewayImpl(expensiveResource);
         SchedulingAlgorithm schedulingAlgorithm = new SchedulingAlgorithm(Runtime.getRuntime().availableProcessors(), gateway, messages);
         schedulingAlgorithm.schedule(listOfMessages);
