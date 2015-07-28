@@ -34,7 +34,7 @@ public class ExpensiveResource {
      *
      * @param message
      */
-    public void add(Message message) {
+    public void addToResourcesQueue(Message message) {
 
         resourcesMessageQueue.add(message); // adds the message to the END of the list, i.e. back of the queue.
         updateResourceAvailability();
@@ -56,6 +56,7 @@ public class ExpensiveResource {
      * updates SchedulingAlgorithm on availability of the resources
      */
     private void updateResourceAvailability() {
+
         System.out.println("updateresourceAVAILIBILITY method");
         System.out.println("true or false: "+(resourcesMessageQueue.size() == MAX_SIZE_OF_MESSAGE_QUEUE));
         resourceStatus.thereAreNoAvailableResources(resourcesMessageQueue.size() == MAX_SIZE_OF_MESSAGE_QUEUE);
@@ -66,7 +67,7 @@ public class ExpensiveResource {
      *
      * @return
      */
-    private String process() {
+    public String processNextMessage() {
 
         long latestIncrease, currentTime = 0;
         int incrementedNumberOfResourcesBeingUsed = numberOfResourcesInUse.getAndIncrement();

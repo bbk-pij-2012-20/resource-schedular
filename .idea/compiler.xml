@@ -24,9 +24,17 @@
         <processorPath useClasspath="true" />
         <module name="resource-schedular" />
       </profile>
+      <profile default="false" name="Annotation profile for resource-scheduler" enabled="true">
+        <sourceOutputDir name="target\generated-sources\annotations" />
+        <sourceTestOutputDir name="target\generated-test-sources\test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="resource-scheduler" />
+      </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="resource-schedular" target="1.8" />
+      <module name="resource-scheduler" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>

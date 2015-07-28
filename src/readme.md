@@ -119,16 +119,16 @@ messages). If further Messages belonging to that group are received, an error sh
 
 I have separated out responsibility to the following classes:
 <ul>
-<li>SchedulerAlgorithm</li>
+<li>SchedulingAlgorithm</li>
 <li>Gateway</li>
 <li>Message</li>
 <li>ExpensiveResource</li>
 </ul>
 
-<b>SchedulerAlgorithm</b></br> is responsible for deciding which message is sent to the resource(s) where it will be processed, via Gateway.
+<b>SchedulingAlgorithm</b></br> is responsible for deciding which message is sent to the resource(s), via Gateway.
 
-<b>Gateway</b></br> is responsible for facilitating asynchronous processing of messages sent from SchedulerAlgorithm by creating a threadpool and execute message processing in separate tasks.
+<b>Gateway</b></br> is responsible for facilitating asynchronous processing of messages sent from SchedulingAlgorithm by creating a threadpool and execute message processing in separate tasks.
 
 <b>Message</b></br> represents each message and stores information about which group each message belongs to.
 
-<b>ExpensiveResource</b></br> represents the resource(s) which process the message(s) and should not be left idle while there are still messages to be processed.
+<b>ExpensiveResource</b></br> represents the resource(s) which process the message(s) and should not be left idle while there are still messages to be processed. It is responsible for updating the status of the resources in the SchedulingAlgorithm.

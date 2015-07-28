@@ -1,9 +1,12 @@
 package com.jpm.ipb;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Created by shahin.zibaee on 27/07/2015.
+ * Creates a list of messages.
+ * Sorts its messages into separate lists by their group ids. Sorting is done in a separate thread, so the data structure chosen is from java.util.concurrent
+ * Keeps track of the current group id of messages to process (in order to reduce interleaving message processing).
  */
 public class Messages {
 
@@ -13,35 +16,39 @@ public class Messages {
 
     public Messages() {
 
-        messagesByGroup = new HashMap<>();
+        messagesByGroup = new ConcurrentHashMap<>();//HashMap<>();
         sortByGroups(createListOfMessages());
         groupIdOfNextMessageToProcess = 0;
 
     }
+
     /**
-     * makes a list of messages
+     * makes a list of messages with unique message number and with a group number
      * @return
      */
     private List<Message> createListOfMessages() {
 
         List<Message> listOfMessages = new LinkedList<>();
-        listOfMessages.add(new MessageWithGroup("#1", 1));
-        listOfMessages.add(new MessageWithGroup("#2", 2));
-        listOfMessages.add(new MessageWithGroup("#3", 2));
-        listOfMessages.add(new MessageWithGroup("#4", 2));
-        listOfMessages.add(new MessageWithGroup("#5", 3));
-        listOfMessages.add(new MessageWithGroup("#6", 3));
-        listOfMessages.add(new MessageWithGroup("#7", 2));
-        listOfMessages.add(new MessageWithGroup("#8", 1));
-        listOfMessages.add(new MessageWithGroup("#9", 1));
-        listOfMessages.add(new MessageWithGroup("#10", 2));
-        listOfMessages.add(new MessageWithGroup("#11", 3));
-        listOfMessages.add(new MessageWithGroup("#12", 4));
-        listOfMessages.add(new MessageWithGroup("#13", 4));
+        String msgNum = "";
+        Random r = new Random();
+        int grpNum = 0;
+
+        for (int i = 0; i < 200; i++) {
+
+            msgNum = "#" + i;
+            grpNum = r.nextInt(4) + 1;
+            listOfMessages.add(new MessageImpl(msgNum, grpNum));
+
+        }
+
         return listOfMessages;
 
     }
 
+    /**
+     *  sorting messages into
+     * @param messages
+     */
     private void sortByGroups(List<Message> messages) {
 
         new Thread() {
@@ -70,6 +77,10 @@ public class Messages {
 
     }
 
+    /**
+     *
+     * @return
+     */
     public Message getNextMessageFromCurrentGroupId() {
 
         LinkedList<Message> messages = new LinkedList<>();
@@ -95,13 +106,19 @@ public class Messages {
 
     }
 
-
+    /**
+     *
+     */
     private void setGroupIdOfNextMessageToProcess() {
 
         //TODO
 
     }
 
+    /**
+     *
+     * @return
+     */
     public int getGroupIdOfNextMessageToProcess() {
 
         //TODO
